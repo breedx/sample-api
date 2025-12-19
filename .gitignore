@@ -8,12 +8,18 @@ venv/
 env/
 ENV/
 .venv
-
-# pytest
+pip-log.txt
+pip-delete-this-directory.txt
 .pytest_cache/
 .coverage
 htmlcov/
 *.cover
+.hypothesis/
+
+# Rust
+rust_tests/target/
+rust_tests/Cargo.lock
+**/*.rs.bk
 
 # IDE
 .vscode/
@@ -26,9 +32,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# Environment
-.env
-*.log
-
-# Internal documentation (not for candidates)
-BUGS_REFERENCE.md
+# Test outputs
+junit.xml
+coverage.xml
+.coverage.*
