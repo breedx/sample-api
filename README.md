@@ -4,9 +4,9 @@
 
 Design and implement comprehensive test automation for a production-like multi-tenant SaaS API with authentication, file management, and rate limiting.
 
-**Time:** 4-6 hours (tiered: 3-4 hours core, +2 hours extended/bonus)
+**Time:** 2-4 hours (tiered: 1.5-2h core, +1h extended, +1h bonus)
 **Level:** Senior (with tiered evaluation)
-**Skills:** Python, pytest, API testing, OAuth2/JWT, multi-tenancy, CI/CD
+**Skills:** Python, pytest, API testing, OAuth2/JWT, multi-tenancy
 
 ## The Challenge
 
@@ -54,72 +54,71 @@ GET /api/v1/admin/stats   - System statistics
 ## Requirements (Tiered Approach)
 
 ### 🎯 Tier 1: Core Requirements (MUST COMPLETE)
-**Target:** 15-18 tests | **Time:** 3-4 hours | **Evaluation:** Minimum passing score
+**Target:** 10-12 tests | **Time:** 1.5-2 hours | **Evaluation:** Minimum passing score
 
-**Authentication Basics (5 tests)**
-- Register tenant + admin user
-- Login with valid credentials
-- Login with invalid credentials
-- Access endpoint without token (should return 401)
-- Access endpoint with invalid token (should return 401)
+**Authentication (4 tests)**
+- Register tenant + admin user successfully
+- Login with valid credentials → get JWT token
+- Login with invalid credentials → 401 error
+- Access protected endpoint without token → 401 error
 
-**User Management with Auth (8 tests)**
-- Create user (authenticated, tenant-scoped)
-- List users (authenticated, returns only tenant's users)
-- Get user by ID (authenticated, tenant-scoped)
-- Update user (authenticated, tenant-scoped)
-- Delete user (authenticated, tenant-scoped)
-- Duplicate username validation (409 conflict)
-- Duplicate email validation (409 conflict)
-- Invalid input validation (422 error)
+**User Management with Auth (5 tests)**
+- Create user (authenticated) → 201 success
+- List users (authenticated, tenant-scoped) → returns only tenant's users
+- Get user by ID (authenticated) → 200 success
+- Update user (authenticated) → 200 success
+- Duplicate username → 409 conflict
 
-**Basic Tenant Isolation (3 tests)**
-- Tenant A cannot access Tenant B's users (404)
+**Basic Tenant Isolation (2 tests)**
+- Tenant A cannot access Tenant B's user → 404
 - List users only shows current tenant's data
-- User operations are scoped to authenticated tenant
 
-**Passing Criteria:** 15+ tests passing, 70%+ code coverage on auth/users modules
+**Passing Criteria:** 10+ tests passing, 60%+ code coverage on core auth/users
 
 ---
 
 ### 🎯 Tier 2: Extended Requirements (SHOULD COMPLETE)
-**Target:** +6-8 tests | **Time:** +1.5-2 hours | **Evaluation:** Strong passing score
+**Target:** +5-7 tests | **Time:** +1 hour | **Evaluation:** Strong passing score
 
-**File Management (4 tests)**
-- Upload file successfully
-- Download file (authenticated, tenant-scoped)
-- List files (authenticated, returns only tenant's files)
-- Delete file (authenticated, tenant-scoped)
+**Additional User Tests (3 tests)**
+- Delete user (soft delete) → is_active=False
+- Duplicate email validation → 409 conflict
+- Invalid input validation → 422 error
+
+**File Management (3 tests)**
+- Upload file successfully → 201, returns file_id
+- Download file (tenant-scoped) → correct content
+- Delete file (tenant-scoped) → 204 success
 
 **Pagination (2 tests)**
-- List users with pagination (test multiple pages)
-- Pagination metadata correct (has_next, total_count, etc.)
+- List users with pagination → multiple pages work
+- Pagination metadata → has_next, total_count correct
 
-**Advanced Auth (2 tests)**
-- Token refresh workflow
-- Role-based access control (admin vs user)
-
-**Strong Pass Criteria:** 20-25 tests passing, 80%+ code coverage
+**Strong Pass Criteria:** 15-18 tests passing, 70%+ code coverage
 
 ---
 
 ### 🎯 Tier 3: Bonus Challenges (OPTIONAL)
-**Target:** +5-10 tests | **Time:** +1-2 hours | **Evaluation:** Exceptional/Outstanding
+**Target:** +5+ tests | **Time:** +1+ hours | **Evaluation:** Exceptional/Outstanding
 
-**Advanced Scenarios:**
-- Rate limiting enforcement (429 responses)
+**Advanced Auth & Security:**
+- Token refresh workflow
+- Role-based access control (admin vs user)
+- Invalid/expired token handling
 - Cross-tenant file access prevention
-- Token expiration handling
-- File type/size validation
-- Concurrent operations testing
 
-**Infrastructure & Documentation:**
-- CI/CD pipeline (GitHub Actions)
-- TESTING_STRATEGY.md documentation
-- Test data factories (factory_boy, Faker)
-- Rust integration tests (cross-language)
+**Performance & Limits:**
+- Rate limiting enforcement (429 responses)
+- File type validation (415 unsupported media)
+- File size limits (413 entity too large)
 
-**Outstanding Criteria:** All 3 tiers completed (25-30+ tests), comprehensive documentation
+**Infrastructure & Documentation (Bonus):**
+- CI/CD pipeline (GitHub Actions) working in PR
+- TESTING_STRATEGY.md explaining your approach
+- Test data factories for realistic data
+- Rust integration tests (1-2 hours additional)
+
+**Outstanding Criteria:** 20+ tests total, comprehensive documentation, working CI/CD
 
 ### Advanced pytest Patterns
 
@@ -293,9 +292,9 @@ def test_rate_limit_enforcement(tenant_a_admin):
    - **(Tier 3)** Optional: Rust test results, CI/CD logs
 
 **What We're Looking For:**
-- **Minimum (Pass):** Tier 1 complete (15+ tests, 70%+ coverage)
-- **Target (Strong):** Tier 1 + Tier 2 (20+ tests, 80%+ coverage)
-- **Outstanding:** All 3 tiers (25+ tests, comprehensive documentation)
+- **Minimum (Pass):** Tier 1 complete (10+ tests, 60%+ coverage, ~2 hours)
+- **Target (Strong):** Tier 1 + Tier 2 (15+ tests, 70%+ coverage, ~3 hours)
+- **Outstanding:** All 3 tiers (20+ tests, CI/CD, docs, ~4+ hours)
 
 ## Questions?
 
