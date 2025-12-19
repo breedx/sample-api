@@ -1,218 +1,248 @@
-# pytest Assessment - User Management API
+# Senior QA Automation Assessment - Multi-Tenant API
 
-Welcome to the pytest technical assessment! This is a practical exercise designed to evaluate your ability to learn and apply pytest for API testing.
+## Overview
 
-## 🎯 Assessment Goals
+Design and implement comprehensive test automation for a production-like multi-tenant SaaS API with authentication, file management, and rate limiting.
 
-This assessment will help us understand:
-1. Your ability to learn pytest quickly (documentation and examples provided)
-2. How you approach API testing
-3. Your Python code quality and testing patterns
-4. Your problem-solving approach when learning new tools
+**Time:** 4-6 hours
+**Level:** Senior
+**Skills:** Python, pytest, API testing, OAuth2/JWT, multi-tenancy, CI/CD
 
-## 📋 What You're Testing
+## The Challenge
 
-A simple FastAPI User Management API with these endpoints:
+Test a FastAPI application with:
+- **JWT authentication** (OAuth2 pattern)
+- **Multi-tenant architecture** with data isolation
+- **File upload/download** workflows
+- **Rate limiting** (10 req/min per endpoint)
+- **Pagination** for large datasets
+- **Role-based access control** (admin vs user)
 
-- `GET /health` - Health check
-- `POST /users` - Create a new user
-- `GET /users` - List all users (with optional `active_only` filter)
-- `GET /users/{user_id}` - Get a specific user
-- `PUT /users/{user_id}` - Update a user
-- `DELETE /users/{user_id}` - Soft delete (sets is_active=False)
-- `DELETE /users/{user_id}/permanent` - Permanently delete
+## API Endpoints
 
-## 🚀 Getting Started
+### Authentication
+```
+POST /auth/register   - Register tenant + admin user
+POST /auth/login      - Get JWT tokens
+POST /auth/refresh    - Refresh access token
+POST /auth/logout     - Invalidate token
+```
 
-### 1. Setup Your Environment
+### Users (Authenticated, Tenant-Scoped)
+```
+GET    /api/v1/users           - List users (paginated)
+POST   /api/v1/users           - Create user
+GET    /api/v1/users/{id}      - Get user details
+PUT    /api/v1/users/{id}      - Update user
+DELETE /api/v1/users/{id}      - Soft delete user
+```
+
+### Files (Authenticated, Tenant-Scoped)
+```
+POST   /api/v1/files/upload    - Upload file
+GET    /api/v1/files/{id}      - Download file
+GET    /api/v1/files           - List files (paginated)
+DELETE /api/v1/files/{id}      - Delete file
+```
+
+### Admin (Admin Role Only)
+```
+GET /api/v1/admin/tenants - List all tenants
+GET /api/v1/admin/stats   - System statistics
+```
+
+## Requirements
+
+### Must Implement (30+ tests)
+
+**Authentication (8+ tests)**
+- Valid login flow
+- Invalid credentials
+- Token expiration handling
+- Token refresh workflow
+- Logout functionality
+- Malformed/missing tokens
+- Role-based access control
+
+**Multi-Tenant Isolation (6+ tests)**
+- Cross-tenant user access (should fail)
+- Cross-tenant file access (should fail)
+- Tenant-scoped data queries
+- Admin cross-tenant access
+
+**User Management (8+ tests)**
+- Create user in tenant
+- List users with pagination
+- Update user details
+- Soft delete user
+- Duplicate username/email handling
+- Invalid input validation
+
+**File Management (6+ tests)**
+- Upload various file types
+- Download files
+- List files with pagination
+- Delete files
+- File type validation
+- File size limits
+
+**Rate Limiting (2+ tests)**
+- Enforce 10 req/min limit
+- Verify 429 status + headers
+
+### Advanced pytest Patterns
+
+**Required:**
+- Custom fixtures for authenticated clients per tenant
+- Parametrized tests for multi-scenario coverage
+- Test markers (`@pytest.mark.auth`, `@pytest.mark.tenant_isolation`, etc.)
+- Proper setup/teardown for isolation
+- Environment configuration support
+
+**Bonus:**
+- Async test patterns
+- Test data factories (factory_boy, Faker)
+- Custom pytest plugins
+- Load/performance testing
+- Mock external services
+
+### CI/CD Pipeline
+
+Create `.github/workflows/tests.yml` with:
+- Multi-environment test runs (dev/stage)
+- Coverage reporting (minimum 80%)
+- Parallel test execution
+- JUnit XML output
+
+### Documentation
+
+Create `TESTING_STRATEGY.md` explaining:
+- Your test architecture
+- Fixture design decisions
+- Multi-tenant isolation approach
+- CI/CD strategy
+- Trade-offs made
+
+## Setup
 
 ```bash
-# Clone this repository (if you haven't already)
-git clone <repository-url>
-cd sample-api
-
-# Create a virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
 # Install dependencies
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+
+# Run API
+export API_ENV=dev
+export JWT_SECRET=test_secret_key
+uvicorn app.main:app --reload --port 8000
+
+# Run tests
+pytest -v --cov=app --cov-report=term-missing
+
+# Run with markers
+pytest -m auth -v
+pytest -m tenant_isolation -v
+pytest -m integration -v
+
+# Parallel execution
+pytest -n auto -v
 ```
 
-### 2. Verify the API Works
+## Evaluation Criteria
 
-```bash
-# Start the API server (in one terminal)
-uvicorn py.main:app --reload --port 8000
+**Technical (60%)**
+- Authentication testing depth
+- Multi-tenant isolation verification
+- Advanced pytest usage (fixtures, parametrization, markers)
+- CI/CD pipeline quality
+- Code organization
 
-# In another terminal, test the health endpoint
-curl http://localhost:8000/health
-```
+**Architecture (25%)**
+- Test design patterns
+- Reusable fixtures
+- Environment handling
+- Scalability considerations
 
-You should see: `{"status":"healthy","timestamp":"..."}`
+**Professional (15%)**
+- Documentation quality
+- Code readability
+- Production-mindedness
+- Edge case coverage
 
-### 3. Run the Example Test
+## Example Patterns
 
-```bash
-# Run the one example test we provided
-pytest -v
-
-# You should see 1 test pass: test_health_check
-```
-
-## 📝 Your Task
-
-**Add comprehensive test coverage for all API endpoints.**
-
-We've provided one example test (`test_health_check`) to show you pytest basics. Your job is to:
-
-1. **Write tests for all endpoints** - Cover success cases and error cases
-2. **Use pytest features effectively** - Fixtures, parametrization, assertions
-3. **Follow testing best practices** - Clear test names, good organization, readable code
-
-### Minimum Requirements (Must Complete)
-
-✅ **At least 15 tests total** covering:
-- User creation (success + validation errors)
-- User listing (empty, with data, filtering)
-- User retrieval (success + not found)
-- User updates (success + conflicts)
-- User deletion (both soft and permanent)
-
-✅ **Use pytest fixtures** - For test client, test data, database cleanup
-
-✅ **Test error cases** - 404s, 409 conflicts, validation errors
-
-✅ **All tests must pass** - Run `pytest -v` to verify
-
-### Bonus Points (Optional)
-
-🌟 **Use pytest.mark.parametrize** - Test multiple inputs in one test
-
-🌟 **Add test coverage reporting** - Run `pytest --cov=py --cov-report=term-missing`
-
-🌟 **Create custom fixtures** - For common test data (e.g., sample users)
-
-🌟 **Test edge cases** - Empty strings, very long inputs, special characters
-
-🌟 **Parallel execution** - Get tests running with `pytest -n auto` (pytest-xdist)
-
-🌟 **Advanced Challenge** - See [ADVANCED_CHALLENGE.md](ADVANCED_CHALLENGE.md) for an optional Kafka/event streaming challenge (for candidates with data pipeline experience)
-
-## 📚 pytest Learning Resources
-
-**Official Docs:**
-- pytest documentation: https://docs.pytest.org/
-- FastAPI testing: https://fastapi.tiangolo.com/tutorial/testing/
-
-**Key Concepts to Learn:**
-
-### Fixtures
+### Authenticated Client Fixture
 ```python
 @pytest.fixture
-def sample_user():
-    return {"username": "testuser", "email": "test@example.com", "full_name": "Test User"}
+def tenant_a_admin(client):
+    """Return authenticated admin client for Tenant A"""
+    # Register tenant
+    register = client.post("/auth/register", json={
+        "tenant_name": "tenant_a",
+        "admin_email": "admin@a.com",
+        "admin_username": "admin_a",
+        "admin_password": "SecurePass123!"
+    })
+
+    # Login
+    login = client.post("/auth/login", json={
+        "username": "admin_a",
+        "password": "SecurePass123!"
+    })
+    token = login.json()["access_token"]
+
+    # Return client with auth header
+    client.headers = {"Authorization": f"Bearer {token}"}
+    return client
 ```
 
-### Parametrization
+### Tenant Isolation Test
 ```python
-@pytest.mark.parametrize("username,expected", [
-    ("abc", 409),  # Too short
-    ("validuser", 201),  # Valid
-])
-def test_create_user_username_validation(client, username, expected):
-    # Test multiple inputs
+@pytest.mark.tenant_isolation
+def test_cross_tenant_user_access_denied(tenant_a_admin, tenant_b_admin):
+    """Tenant A cannot access Tenant B's users"""
+    # Tenant B creates user
+    user_b = tenant_b_admin.post("/api/v1/users", json={
+        "username": "bob",
+        "email": "bob@b.com",
+        "full_name": "Bob User"
+    })
+    user_b_id = user_b.json()["id"]
+
+    # Tenant A attempts access (should fail)
+    response = tenant_a_admin.get(f"/api/v1/users/{user_b_id}")
+    assert response.status_code == 404
 ```
 
-### Async Tests (if needed)
+### Rate Limit Test
 ```python
-@pytest.mark.asyncio
-async def test_something_async():
-    result = await some_async_function()
-    assert result == expected
+def test_rate_limit_enforcement(tenant_a_admin):
+    """Verify 429 after exceeding rate limit"""
+    for i in range(11):
+        response = tenant_a_admin.get("/api/v1/users")
+        if i < 10:
+            assert response.status_code == 200
+        else:
+            assert response.status_code == 429
+            assert "X-RateLimit-Reset" in response.headers
 ```
 
-## 🧪 Running Your Tests
+## Submission
 
-```bash
-# Run all tests with verbose output
-pytest -v
+1. **Push code** to your fork/branch
+2. **Verify tests pass**: `pytest -v --cov=py`
+3. **Submit:**
+   - Repository link
+   - Test output (coverage report)
+   - `TESTING_STRATEGY.md`
 
-# Run specific test file
-pytest tests/test_users.py -v
+## Questions?
 
-# Run specific test
-pytest tests/test_users.py::test_create_user_success -v
-
-# Run with coverage report
-pytest --cov=py --cov-report=term-missing
-
-# Run tests in parallel (optional)
-pytest -n auto
-```
-
-## 📤 Submission
-
-When you're done:
-
-1. **Commit your changes**:
-   ```bash
-   git add .
-   git commit -m "Add comprehensive pytest test coverage"
-   git push
-   ```
-
-2. **Verify all tests pass**:
-   ```bash
-   pytest -v
-   ```
-
-3. **Send us**:
-   - Link to your GitHub repository
-   - Test output showing all tests passing
-   - Any notes about your approach or challenges
-
-## ⏱️ Time Expectation
-
-**Recommended: 2-4 hours**
-
-This is not a speed test - we value quality over speed. Take your time to:
-- Read the pytest documentation
-- Understand the API behavior
-- Write clean, readable tests
-
-## ❓ Questions?
-
-If you have questions about:
-- **The assessment requirements** - Email us
-- **How pytest works** - Check the docs first, then ask
-- **The API behavior** - Read `py/main.py` or test it manually
-
-## 🎓 What We're Looking For
-
-**Strong candidates will:**
-- ✅ Learn pytest quickly from documentation
-- ✅ Write clear, well-organized tests
-- ✅ Cover both success and error cases
-- ✅ Use fixtures effectively
-- ✅ Follow Python best practices
-
-**We are NOT expecting:**
-- ❌ 100% code coverage
-- ❌ Complex mocking or advanced pytest features
-- ❌ Performance optimization
-- ❌ Prior pytest expertise (you're learning it now!)
-
-## 💡 Tips
-
-1. **Start simple** - Get basic tests working first, then add more
-2. **Read the API code** - Understanding `py/main.py` helps you know what to test
-3. **Use the example** - The `test_health_check` shows the pattern
-4. **Run tests frequently** - Verify each test works before moving on
-5. **Ask questions** - If something is unclear, reach out
+- **pytest patterns?** https://docs.pytest.org/
+- **FastAPI testing?** https://fastapi.tiangolo.com/tutorial/testing/
+- **JWT/OAuth2?** https://jwt.io/introduction
+- **Multi-tenancy?** Think AWS IAM resource scoping
 
 ---
 
-**Good luck! We're excited to see your work.** 🚀
-
-*This assessment mirrors real-world testing practices used in production systems.*
+**Good luck! Show us your senior-level testing expertise.**
