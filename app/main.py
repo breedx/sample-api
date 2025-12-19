@@ -1,6 +1,6 @@
 """
 Advanced Multi-Tenant User & File Management API with Authentication
-For Senior QA Automation Assessment - Ezequiel Nams
+For Senior QA Automation Assessment
 """
 from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile, Request
 from fastapi.responses import StreamingResponse
