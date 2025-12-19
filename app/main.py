@@ -1,6 +1,6 @@
 """
 Advanced Multi-Tenant User & File Management API with Authentication
-For Senior QA Automation Assessment - Ezequiel Nams
+For Senior QA Automation Assessment
 """
 from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile, Request
 from fastapi.responses import StreamingResponse
@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 from datetime import datetime, UTC
 import uuid
 import io
+import asyncio
 from collections import defaultdict
 from time import time
 
@@ -512,6 +513,78 @@ async def delete_user(
 
     user["is_active"] = False
     user["updated_at"] = datetime.now(UTC)
+
+
+@app.post("/api/v1/users/bulk", response_model=List[User], status_code=status.HTTP_201_CREATED)
+async def create_users_bulk(
+    request: Request,
+    users_data: List[UserCreate],
+    current_user: TokenData = Depends(get_current_user),
+):
+    """
+    Create multiple users in parallel (demonstrates async patterns).
+
+    This endpoint uses asyncio.gather() to simulate concurrent operations.
+    Tests should use @pytest.mark.asyncio to properly test async behavior.
+    """
+    check_rate_limit(request, current_user.user_id)
+
+    if len(users_data) > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot create more than 50 users at once"
+        )
+
+    async def create_single_user(user_data: UserCreate):
+        """Async helper to simulate I/O-bound user creation"""
+        # Check for duplicates
+        for user in users_db.values():
+            if user["username"] == user_data.username:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Username '{user_data.username}' already exists"
+                )
+            if user["email"] == user_data.email:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Email '{user_data.email}' already exists"
+                )
+
+        # Simulate async operation (e.g., database write, external API call)
+        await asyncio.sleep(0.01)  # Simulate I/O delay
+
+        user_id = str(uuid.uuid4())
+        now = datetime.now(UTC)
+
+        new_user = {
+            "id": user_id,
+            "tenant_id": current_user.tenant_id,
+            "username": user_data.username,
+            "email": user_data.email,
+            "full_name": user_data.full_name,
+            "password_hash": hash_password("TempPassword123!"),
+            "role": user_data.role,
+            "created_at": now,
+            "updated_at": now,
+            "is_active": True,
+        }
+
+        users_db[user_id] = new_user
+        return User(**{k: v for k, v in new_user.items() if k != "password_hash"})
+
+    # Execute all user creations concurrently
+    try:
+        created_users = await asyncio.gather(
+            *[create_single_user(user_data) for user_data in users_data]
+        )
+        return created_users
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bulk user creation failed: {str(e)}"
+        )
 
 
 # ============================================================================
