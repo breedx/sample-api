@@ -32,6 +32,7 @@ POST /auth/logout     - Invalidate token
 ```
 GET    /api/v1/users           - List users (paginated)
 POST   /api/v1/users           - Create user
+POST   /api/v1/users/bulk      - Create multiple users (async, uses asyncio.gather)
 GET    /api/v1/users/{id}      - Get user details
 PUT    /api/v1/users/{id}      - Update user
 DELETE /api/v1/users/{id}      - Soft delete user
@@ -51,6 +52,45 @@ GET /api/v1/admin/tenants - List all tenants
 GET /api/v1/admin/stats   - System statistics
 ```
 
+## Project Structure
+
+```
+sample-api/
+├── app/                    # FastAPI application code
+│   ├── main.py            # API endpoints and business logic
+│   ├── auth.py            # JWT authentication, OAuth2 patterns
+│   ├── config.py          # Environment configuration
+│   └── __init__.py
+│
+├── py_tests/              # Python test suite (YOUR WORK GOES HERE)
+│   ├── conftest.py        # Shared pytest fixtures
+│   ├── test_health.py     # Example starter test
+│   ├── test_async_example.py  # Async test patterns
+│   └── (your tests here)  # Create test_auth.py, test_users.py, etc.
+│
+├── rust_tests/            # Rust integration tests (OPTIONAL BONUS)
+│   ├── Cargo.toml         # Rust project config
+│   └── tests/
+│       └── integration_tests.rs  # HTTP client tests from external process
+│
+├── pytest.ini             # Pytest configuration (markers, coverage)
+├── requirements.txt       # Python dependencies
+└── README.md             # This file
+```
+
+**Where to add your tests:**
+- Create test files in `py_tests/` directory (e.g., `test_auth.py`, `test_users.py`, `test_files.py`)
+- Use provided fixtures from `conftest.py`
+- Follow patterns in `test_async_example.py` for async operations
+- See example fixture patterns below
+
+**Rust tests (Optional):**
+- Located in `rust_tests/tests/integration_tests.rs`
+- Tests API from external HTTP client perspective
+- Run with: `cd rust_tests && cargo test`
+- Demonstrates polyglot testing capability
+- **Completely optional** - focus on Python tests first
+
 ## Requirements (Tiered Approach)
 
 ### 🎯 Tier 1: Core Requirements (MUST COMPLETE)
@@ -68,6 +108,11 @@ GET /api/v1/admin/stats   - System statistics
 - Get user by ID (authenticated) → 200 success
 - Update user (authenticated) → 200 success
 - Duplicate username → 409 conflict
+
+**Async Programming (1 test)**
+- Bulk user creation using async patterns → tests `POST /api/v1/users/bulk`
+- Must use `@pytest.mark.asyncio` and async/await patterns
+- See `py_tests/test_async_example.py` for patterns
 
 **Basic Tenant Isolation (2 tests)**
 - Tenant A cannot access Tenant B's user → 404
@@ -107,6 +152,12 @@ GET /api/v1/admin/stats   - System statistics
 - Invalid/expired token handling
 - Cross-tenant file access prevention
 
+**Async & Concurrency:**
+- Concurrent user operations using `asyncio.gather()`
+- Concurrent file uploads
+- Performance testing (async vs sequential)
+- Race condition handling
+
 **Performance & Limits:**
 - Rate limiting enforcement (429 responses)
 - File type validation (415 unsupported media)
@@ -127,13 +178,14 @@ GET /api/v1/admin/stats   - System statistics
 - Parametrized tests for multi-scenario coverage
 - Test markers (`@pytest.mark.auth`, `@pytest.mark.tenant_isolation`, etc.)
 - Proper setup/teardown for isolation
-- Environment configuration support
+- **Async test patterns** - At least one test using `@pytest.mark.asyncio`
+- AsyncClient for testing bulk operations
 
 **Bonus:**
-- Async test patterns
 - Test data factories (factory_boy, Faker)
 - Custom pytest plugins
-- Load/performance testing
+- Performance comparison (async vs sync operations)
+- Concurrent operation testing with `asyncio.gather()`
 - Mock external services
 
 ### Rust Integration Tests (Optional Bonus)
