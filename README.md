@@ -4,8 +4,8 @@
 
 Design and implement comprehensive test automation for a production-like multi-tenant SaaS API with authentication, file management, and rate limiting.
 
-**Time:** 4-6 hours
-**Level:** Senior
+**Time:** 4-6 hours (tiered: 3-4 hours core, +2 hours extended/bonus)
+**Level:** Senior (with tiered evaluation)
 **Skills:** Python, pytest, API testing, OAuth2/JWT, multi-tenancy, CI/CD
 
 ## The Challenge
@@ -51,44 +51,75 @@ GET /api/v1/admin/tenants - List all tenants
 GET /api/v1/admin/stats   - System statistics
 ```
 
-## Requirements
+## Requirements (Tiered Approach)
 
-### Must Implement (30+ tests)
+### 🎯 Tier 1: Core Requirements (MUST COMPLETE)
+**Target:** 15-18 tests | **Time:** 3-4 hours | **Evaluation:** Minimum passing score
 
-**Authentication (8+ tests)**
-- Valid login flow
-- Invalid credentials
-- Token expiration handling
+**Authentication Basics (5 tests)**
+- Register tenant + admin user
+- Login with valid credentials
+- Login with invalid credentials
+- Access endpoint without token (should return 401)
+- Access endpoint with invalid token (should return 401)
+
+**User Management with Auth (8 tests)**
+- Create user (authenticated, tenant-scoped)
+- List users (authenticated, returns only tenant's users)
+- Get user by ID (authenticated, tenant-scoped)
+- Update user (authenticated, tenant-scoped)
+- Delete user (authenticated, tenant-scoped)
+- Duplicate username validation (409 conflict)
+- Duplicate email validation (409 conflict)
+- Invalid input validation (422 error)
+
+**Basic Tenant Isolation (3 tests)**
+- Tenant A cannot access Tenant B's users (404)
+- List users only shows current tenant's data
+- User operations are scoped to authenticated tenant
+
+**Passing Criteria:** 15+ tests passing, 70%+ code coverage on auth/users modules
+
+---
+
+### 🎯 Tier 2: Extended Requirements (SHOULD COMPLETE)
+**Target:** +6-8 tests | **Time:** +1.5-2 hours | **Evaluation:** Strong passing score
+
+**File Management (4 tests)**
+- Upload file successfully
+- Download file (authenticated, tenant-scoped)
+- List files (authenticated, returns only tenant's files)
+- Delete file (authenticated, tenant-scoped)
+
+**Pagination (2 tests)**
+- List users with pagination (test multiple pages)
+- Pagination metadata correct (has_next, total_count, etc.)
+
+**Advanced Auth (2 tests)**
 - Token refresh workflow
-- Logout functionality
-- Malformed/missing tokens
-- Role-based access control
+- Role-based access control (admin vs user)
 
-**Multi-Tenant Isolation (6+ tests)**
-- Cross-tenant user access (should fail)
-- Cross-tenant file access (should fail)
-- Tenant-scoped data queries
-- Admin cross-tenant access
+**Strong Pass Criteria:** 20-25 tests passing, 80%+ code coverage
 
-**User Management (8+ tests)**
-- Create user in tenant
-- List users with pagination
-- Update user details
-- Soft delete user
-- Duplicate username/email handling
-- Invalid input validation
+---
 
-**File Management (6+ tests)**
-- Upload various file types
-- Download files
-- List files with pagination
-- Delete files
-- File type validation
-- File size limits
+### 🎯 Tier 3: Bonus Challenges (OPTIONAL)
+**Target:** +5-10 tests | **Time:** +1-2 hours | **Evaluation:** Exceptional/Outstanding
 
-**Rate Limiting (2+ tests)**
-- Enforce 10 req/min limit
-- Verify 429 status + headers
+**Advanced Scenarios:**
+- Rate limiting enforcement (429 responses)
+- Cross-tenant file access prevention
+- Token expiration handling
+- File type/size validation
+- Concurrent operations testing
+
+**Infrastructure & Documentation:**
+- CI/CD pipeline (GitHub Actions)
+- TESTING_STRATEGY.md documentation
+- Test data factories (factory_boy, Faker)
+- Rust integration tests (cross-language)
+
+**Outstanding Criteria:** All 3 tiers completed (25-30+ tests), comprehensive documentation
 
 ### Advanced pytest Patterns
 
@@ -176,23 +207,21 @@ cd rust_tests && cargo test
 ## Evaluation Criteria
 
 **Technical (60%)**
-- Authentication testing depth
-- Multi-tenant isolation verification
-- Advanced pytest usage (fixtures, parametrization, markers)
-- CI/CD pipeline quality
-- Code organization
+- **Tier 1 (Critical):** Auth basics + User CRUD + Tenant isolation
+- **Tier 2 (Important):** Files, pagination, advanced auth
+- **Tier 3 (Bonus):** Rate limiting, CI/CD, advanced scenarios
 
 **Architecture (25%)**
-- Test design patterns
-- Reusable fixtures
-- Environment handling
-- Scalability considerations
+- Test fixture design (authenticated clients per tenant)
+- Test organization and reusability
+- Setup/teardown patterns
+- Code clarity and maintainability
 
 **Professional (15%)**
-- Documentation quality
-- Code readability
-- Production-mindedness
-- Edge case coverage
+- Code quality (PEP 8, type hints, clear naming)
+- Documentation (inline comments, TESTING_STRATEGY.md)
+- Problem-solving approach (how you tackled complex scenarios)
+- Time management (completed appropriate tier for time spent)
 
 ## Example Patterns
 
@@ -256,12 +285,17 @@ def test_rate_limit_enforcement(tenant_a_admin):
 
 1. **Push code** to your fork/branch
 2. **Verify tests pass**: `pytest -v --cov=app`
-3. **(Optional) Run Rust tests**: `cd rust_tests && cargo test`
-4. **Submit:**
+3. **Submit:**
    - Repository link
-   - Test output (coverage report)
-   - `TESTING_STRATEGY.md`
-   - (Optional) Rust test results
+   - Test output showing: test count, pass rate, coverage %
+   - Brief summary of what tier you completed
+   - **(Tier 2+)** `TESTING_STRATEGY.md` explaining your approach
+   - **(Tier 3)** Optional: Rust test results, CI/CD logs
+
+**What We're Looking For:**
+- **Minimum (Pass):** Tier 1 complete (15+ tests, 70%+ coverage)
+- **Target (Strong):** Tier 1 + Tier 2 (20+ tests, 80%+ coverage)
+- **Outstanding:** All 3 tiers (25+ tests, comprehensive documentation)
 
 ## Questions?
 
