@@ -52,3 +52,52 @@ jobs:
       with:
         name: test-results-${{ matrix.python-version }}-${{ matrix.environment }}
         path: junit.xml
+
+  rust-tests:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo build
+      uses: actions/cache@v3
+      with:
+        path: rust_tests/target
+        key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Setup Python and start API
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies and start API
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        export API_ENV=dev
+        export JWT_SECRET=test_secret_for_rust_tests
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 5  # Wait for API to start
+
+    - name: Run Rust integration tests
+      working-directory: rust_tests
+      run: cargo test --verbose
+
+    - name: Upload Rust test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: rust-test-results
+        path: rust_tests/target/debug/deps/*.xml

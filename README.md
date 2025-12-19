@@ -106,6 +106,28 @@ GET /api/v1/admin/stats   - System statistics
 - Load/performance testing
 - Mock external services
 
+### Rust Integration Tests (Optional Bonus)
+
+We also provide Rust integration tests in `rust_tests/` to demonstrate cross-language testing capability. This is **completely optional** but shows production-level polyglot engineering skills.
+
+**Run Rust tests:**
+```bash
+cd rust_tests
+cargo test
+cargo test -- --nocapture  # Verbose output
+```
+
+**Bonus points for:**
+- Completing the TODO tests in `rust_tests/tests/integration_tests.rs`
+- Adding additional Rust test cases
+- Demonstrating Rust/Python test coordination
+
+**Why Rust tests?**
+- Demonstrates polyglot capability (Python + Rust)
+- Shows HTTP client testing from external process
+- Mirrors our production stack (we use both Python and Rust)
+- Tests API contracts from consumer perspective
+
 ### CI/CD Pipeline
 
 Create `.github/workflows/tests.yml` with:
@@ -146,6 +168,9 @@ pytest -m integration -v
 
 # Parallel execution
 pytest -n auto -v
+
+# Rust tests (optional bonus)
+cd rust_tests && cargo test
 ```
 
 ## Evaluation Criteria
@@ -230,11 +255,13 @@ def test_rate_limit_enforcement(tenant_a_admin):
 ## Submission
 
 1. **Push code** to your fork/branch
-2. **Verify tests pass**: `pytest -v --cov=py`
-3. **Submit:**
+2. **Verify tests pass**: `pytest -v --cov=app`
+3. **(Optional) Run Rust tests**: `cd rust_tests && cargo test`
+4. **Submit:**
    - Repository link
    - Test output (coverage report)
    - `TESTING_STRATEGY.md`
+   - (Optional) Rust test results
 
 ## Questions?
 
